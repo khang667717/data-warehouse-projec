@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Data Warehouse Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .metric-value { font-size: 2rem; font-weight: bold; }
+        .chart-container { height: 300px; }
+        .navbar { background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                📊 Sales Data Warehouse Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- KPI Cards -->
+        <div class="row">
+            <div class="col-md-2">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2">Total Sales</h6>
+                        <div class="metric-value" id="totalSales">$0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2">Total Profit</h6>
+                        <div class="metric-value" id="totalProfit">$0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2">Quantity Sold</h6>
+                        <div class="metric-value" id="totalQuantity">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2">Total Orders</h6>
+                        <div class="metric-value" id="totalOrders">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2">Avg Margin</h6>
+                        <div class="metric-value" id="avgMargin">0%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2">Total Customers</h6>
+                        <div class="metric-value" id="totalCustomers">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📈 Daily Sales Trend</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📦 Top Products</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="productsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>👥 Customer Segments</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="segmentsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🌍 Sales by Country</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <div id="geoChart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📋 Sales Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="salesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Day</th>
+                                        <th>Sales</th>
+                                        <th>Profit</th>
+                                        <th>Quantity</th>
+                                        <th>Orders</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTableBody">
+                                    <!-- Data will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-4 py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">Sales Data Warehouse Dashboard | Data updated in real-time</span>
+        </div>
+    </footer>
+
+    <script>
+        // Mock data - In production, fetch from API
+        const mockData = {
+            summary: {
+                total_sales: 221145.10,
+                total_profit: 199315.10,
+                total_quantity: 2183,
+                order_count: 1000,
+                avg_margin: 79.91,
+                customer_count: 6336
+            },
+            daily: [
+                {date: '2025-12-02', day: 'Tuesday', sales: 740.63, profit: 666.57, quantity: 12, orders: 4},
+                {date: '2025-12-01', day: 'Monday', sales: 976.13, profit: 878.52, quantity: 8, orders: 5},
+                {date: '2025-11-30', day: 'Sunday', sales: 707.66, profit: 636.89, quantity: 11, orders: 4},
+                {date: '2025-11-29', day: 'Saturday', sales: 546.93, profit: 492.24, quantity: 8, orders: 3},
+                {date: '2025-11-28', day: 'Friday', sales: 1424.93, profit: 1282.44, quantity: 11, orders: 4},
+            ],
+            products: [
+                {name: 'Product PRD420', revenue: 2658.86, profit: 2408.86},
+                {name: 'Product PRD119', revenue: 2383.15, profit: 2143.15},
+                {name: 'Product PRD465', revenue: 2380.76, profit: 2230.76},
+                {name: 'Product PRD356', revenue: 2350.28, profit: 2200.28},
+                {name: 'Product PRD296', revenue: 2254.47, profit: 2104.47},
+            ],
+            segments: [
+                {segment: 'INTERNATIONAL', sales: 50000},
+                {segment: 'MAJOR_CITY', sales: 80000},
+                {segment: 'OTHER', sales: 91145.10},
+            ]
+        };
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            updateKPIs();
+            renderCharts();
+            populateTable();
+        });
+
+        function updateKPIs() {
+            document.getElementById('totalSales').textContent = 
+                `$${mockData.summary.total_sales.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('totalProfit').textContent = 
+                `$${mockData.summary.total_profit.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('totalQuantity').textContent = 
+                mockData.summary.total_quantity.toLocaleString();
+            document.getElementById('totalOrders').textContent = 
+                mockData.summary.order_count.toLocaleString();
+            document.getElementById('avgMargin').textContent = 
+                `${mockData.summary.avg_margin.toFixed(1)}%`;
+            document.getElementById('totalCustomers').textContent = 
+                mockData.summary.customer_count.toLocaleString();
+        }
+
+        function renderCharts() {
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: mockData.daily.map(d => d.date),
+                    datasets: [{
+                        label: 'Daily Sales ($)',
+                        data: mockData.daily.map(d => d.sales),
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Products Chart
+            const productsCtx = document.getElementById('productsChart').getContext('2d');
+            new Chart(productsCtx, {
+                type: 'bar',
+                data: {
+                    labels: mockData.products.map(p => p.name),
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: mockData.products.map(p => p.revenue),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                }
+            });
+
+            // Segments Chart
+            const segmentsCtx = document.getElementById('segmentsChart').getContext('2d');
+            new Chart(segmentsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: mockData.segments.map(s => s.segment),
+                    datasets: [{
+                        data: mockData.segments.map(s => s.sales),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(54, 162, 235, 0.5)',
+                            'rgba(255, 206, 86, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function populateTable() {
+            const tbody = document.getElementById('salesTableBody');
+            mockData.daily.forEach(day => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${day.date}</td>
+                    <td>${day.day}</td>
+                    <td>$${day.sales.toFixed(2)}</td>
+                    <td>$${day.profit.toFixed(2)}</td>
+                    <td>${day.quantity}</td>
+                    <td>${day.orders}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
